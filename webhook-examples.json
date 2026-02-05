@@ -1,0 +1,106 @@
+{
+  "BOOKING_CREATED": {
+    "triggerEvent": "BOOKING_CREATED",
+    "createdAt": "2026-02-05T01:57:30.049Z",
+    "payload": {
+      "id": 123456,
+      "uid": "demo-booking-uid-001",
+      "title": "30min Career Coaching",
+      "startTime": "2026-02-06T10:00:00.000Z",
+      "endTime": "2026-02-06T10:30:00.000Z",
+      "attendees": [
+        {
+          "email": "alice@example.com",
+          "name": "Alice Wang",
+          "timeZone": "Asia/Shanghai"
+        }
+      ],
+      "organizer": {
+        "email": "coach@cal.com",
+        "name": "Coach Zhang",
+        "timeZone": "Asia/Shanghai"
+      },
+      "cancelUrl": "https://cal.com/booking/demo-booking-uid-001?cancel=true",
+      "metadata": {},
+      "cancellationReason": null
+    }
+  },
+  "BOOKING_CANCELLED": {
+    "triggerEvent": "BOOKING_CANCELLED",
+    "createdAt": "2026-02-05T02:10:00.000Z",
+    "payload": {
+      "id": 123456,
+      "uid": "demo-booking-uid-001",
+      "title": "30min Career Coaching",
+      "startTime": "2026-02-06T10:00:00.000Z",
+      "endTime": "2026-02-06T10:30:00.000Z",
+      "attendees": [
+        {
+          "email": "alice@example.com",
+          "name": "Alice Wang",
+          "timeZone": "Asia/Shanghai"
+        }
+      ],
+      "organizer": {
+        "email": "coach@cal.com",
+        "name": "Coach Zhang",
+        "timeZone": "Asia/Shanghai"
+      },
+      "cancelUrl": "https://cal.com/booking/demo-booking-uid-001?cancel=true",
+      "metadata": {},
+      "cancellationReason": "User cancelled"
+    }
+  },
+  "MEETING_ENDED": {
+    "triggerEvent": "MEETING_ENDED",
+    "createdAt": "2026-02-06T10:31:00.000Z",
+    "payload": {
+      "id": 123457,
+      "uid": "demo-booking-uid-002",
+      "title": "30min Career Coaching",
+      "startTime": "2026-02-06T09:00:00.000Z",
+      "endTime": "2026-02-06T09:30:00.000Z",
+      "attendees": [
+        {
+          "email": "bob@example.com",
+          "name": "Bob Liu",
+          "timeZone": "Asia/Shanghai"
+        }
+      ],
+      "organizer": {
+        "email": "coach@cal.com",
+        "name": "Coach Li",
+        "timeZone": "Asia/Shanghai"
+      },
+      "cancelUrl": "https://cal.com/booking/demo-booking-uid-002?cancel=true",
+      "metadata": {},
+      "cancellationReason": null
+    }
+  },
+  "NO_SHOW": {
+    "triggerEvent": "NO_SHOW",
+    "createdAt": "2026-02-06T11:00:00.000Z",
+    "payload": {
+      "id": 123458,
+      "uid": "demo-booking-uid-003",
+      "title": "30min Career Coaching",
+      "startTime": "2026-02-06T08:00:00.000Z",
+      "endTime": "2026-02-06T08:30:00.000Z",
+      "attendees": [
+        {
+          "email": "charlie@example.com",
+          "name": "Charlie Chen",
+          "timeZone": "Asia/Shanghai"
+        }
+      ],
+      "organizer": {
+        "email": "coach@cal.com",
+        "name": "Coach Wang",
+        "timeZone": "Asia/Shanghai"
+      },
+      "cancelUrl": "https://cal.com/booking/demo-booking-uid-003?cancel=true",
+      "metadata": {},
+      "cancellationReason": null
+    }
+  }
+}
