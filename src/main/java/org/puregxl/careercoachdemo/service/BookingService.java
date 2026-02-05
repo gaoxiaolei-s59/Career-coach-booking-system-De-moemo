@@ -1,89 +1,170 @@
+
 package org.puregxl.careercoachdemo.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.puregxl.careercoachdemo.mapper.BookingMapper;
 import org.puregxl.careercoachdemo.model.Booking;
 import org.puregxl.careercoachdemo.model.BookingStatus;
 import org.puregxl.careercoachdemo.request.CalWebhookRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
+import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
 @Service
 public class BookingService {
 
     private final BookingMapper bookingMapper;
-    // Cal.com 预约基准链接
-    private static final String CAL_BASE_URL = "https://cal.com/chau-chau-smfbef/30min";
+
+
+    @Value("${app.cal.cal-base-url:https://cal.com/chau-chau-smfbef/30min}")
+    private String calBaseUrl;
 
     public BookingService(BookingMapper bookingMapper) {
         this.bookingMapper = bookingMapper;
     }
 
-    // A. 生成预约链接
+    /**
+     * A. 生成预约链接
+     * 利用 Metadata 透传 UserId，形成业务闭环
+     */
     public String generateBookingUrl(String userId) {
-        // 关键点：利用 metadata 将 userId 传给 Cal.com
-        // 这样 Webhook 回调时，我们才知道是哪个 userId 预约的
-        return CAL_BASE_URL + "?metadata[userId]=" + userId;
+        String url = calBaseUrl + "?metadata[userId]=" + userId;
+        log.info("Generated booking URL for user [{}]: {}", userId, url);
+        return url;
     }
 
-    // B. 获取我的预约
+    /**
+     * B. 获取我的预约列表
+     */
     public List<Booking> getMyBookings(String userId) {
         return bookingMapper.findByUserId(userId);
     }
 
-    // C. 获取取消链接
+    /**
+     * C. 获取取消链接
+     * 逻辑：查找该用户当前 "即将开始 (BOOKING_CREATED)" 的最近一次预约
+     */
     public String generateCancelUrl(String userId) {
-        // 真实场景通常需要前端传 bookingUid，这里简化逻辑
-        // 假设这里需要返回最近一次预约的取消链接，或者让前端在列表里点取消
-        // Cal.com 的通用取消链接格式: https://app.cal.com/booking/{uid}
-        // 为了演示 API，我们假设前端必须传 bookingUid 给这个接口，或者我们返回列表让前端拼
-        return "请调用 /api/bookings 接口获取 bookingUid，取消链接为: https://app.cal.com/booking/{bookingUid}?cancel=true";
+        // 查询最近的一个有效预约
+        Booking activeBooking = bookingMapper.findLatestActiveBooking(userId);
+
+        if (activeBooking == null) {
+            log.warn("User [{}] requested cancel URL but has no active bookings.", userId);
+            throw new RuntimeException("您当前没有可取消的预约");
+        }
+
+        // 拼接 Cal.com 官方取消链接格式
+        String cancelUrl = "https://app.cal.com/booking/" + activeBooking.getCalBookingUid() + "?cancel=true";
+        log.info("Generated cancel URL for user [{}], Booking UID [{}]: {}", userId, activeBooking.getCalBookingUid(), cancelUrl);
+        return cancelUrl;
     }
 
-    // C的重载：根据UID生成真实链接
-    public String getCancelUrlByUid(String bookingUid) {
-        return "https://app.cal.com/booking/" + bookingUid + "?cancel=true";
-    }
-
-    // D. 处理 Webhook
-    @Transactional
+    /**
+     * D. 处理 Webhook (核心逻辑)
+     * 包含幂等性检查、数据清洗、防御性编程
+     */
+    @Transactional(rollbackFor = Exception.class)
     public void handleWebhook(CalWebhookRequest request) {
         String event = request.getTriggerEvent();
         var payload = request.getPayload();
+        String uid = payload.getUid();
 
-        if ("BOOKING_CREATED".equals(event)) {
-            Booking booking = new Booking();
-            booking.setCalBookingUid(payload.getUid());
+        log.info("Webhook Received -> Event: [{}], UID: [{}]", event, uid);
 
-            // 解析时间 (ISO 8601)
-            booking.setStartTime(ZonedDateTime.parse(payload.getStartTime()).toLocalDateTime());
-            booking.setEndTime(ZonedDateTime.parse(payload.getEndTime()).toLocalDateTime());
-
-            // 获取 User Info (从 attendees[0] 获取)
-            if (payload.getAttendees() != null && payload.getAttendees().length > 0) {
-                booking.setUserEmail(payload.getAttendees()[0].getEmail());
-            }
-
-            // 获取 Coach Info
-            if (payload.getOrganizer() != null) {
-                booking.setCoachName(payload.getOrganizer().getName());
-                booking.setCoachEmail(payload.getOrganizer().getEmail());
-            }
-
-            // 获取 metadata 中的 userId (关键闭环)
-            if (payload.getMetadata() != null) {
-                booking.setUserId(payload.getMetadata().get("userId"));
-            } else {
-                booking.setUserId("unknown"); // 容错
-            }
-
-            booking.setStatus(BookingStatus.BOOKING_CREATED);
-            bookingMapper.insert(booking);
-
-        } else if ("BOOKING_CANCELLED".equals(event)) {
-            bookingMapper.updateStatus(payload.getUid(), BookingStatus.BOOKING_CANCELLED);
+        // 基础校验
+        if (!StringUtils.hasText(uid)) {
+            log.error("Webhook payload invalid: UID is missing.");
+            return;
         }
+
+        try {
+            switch (event) {
+                case "BOOKING_CREATED" -> handleBookingCreated(payload, uid);
+                case "BOOKING_CANCELLED" -> handleBookingCancelled(uid);
+                default -> log.warn("Ignored unsupported event: {}", event);
+            }
+        } catch (Exception e) {
+            log.error("Error processing webhook for UID: {}", uid, e);
+            throw e; // 抛出异常以触发事务回滚
+        }
+    }
+
+    // --- 内部 Helper 方法 ---
+    private void handleBookingCreated(CalWebhookRequest.Payload payload, String uid) {
+        // 1. [关键] 幂等性检查：防止 Cal.com 重复发送导致数据重复
+        if (bookingMapper.findByCalUid(uid) != null) {
+            log.warn("Idempotency Check: Booking already exists for UID [{}]. Skipping insert.", uid);
+            return;
+        }
+
+        Booking booking = new Booking();
+        booking.setCalBookingUid(uid);
+        // 2. 时间解析 (安全处理)
+        booking.setStartTime(parseTimeSafe(payload.getStartTime()));
+        booking.setEndTime(parseTimeSafe(payload.getEndTime()));
+
+        // 3. 提取用户信息
+        if (payload.getAttendees() != null && payload.getAttendees().length > 0) {
+            booking.setUserEmail(payload.getAttendees()[0].getEmail());
+        }
+
+        // 4. 提取导师信息
+        if (payload.getOrganizer() != null) {
+            booking.setCoachName(payload.getOrganizer().getName());
+            booking.setCoachEmail(payload.getOrganizer().getEmail());
+        }
+
+        // 5. [关键] 提取 Metadata 中的 UserId
+        Map<String, String> metadata = payload.getMetadata();
+        if (metadata != null && StringUtils.hasText(metadata.get("userId"))) {
+            booking.setUserId(metadata.get("userId"));
+        } else {
+            log.error("CRITICAL: Booking created without userId in metadata! UID: {}", uid);
+            booking.setUserId("UNKNOWN_USER"); // 避免数据库报错，方便后续人工排查
+        }
+
+        booking.setStatus(BookingStatus.BOOKING_CREATED);
+        bookingMapper.insert(booking);
+        log.info("Booking persisted successfully. UID: [{}]", uid);
+    }
+
+    private void handleBookingCancelled(String uid) {
+        int rows = bookingMapper.updateStatus(uid, BookingStatus.BOOKING_CANCELLED);
+        if (rows > 0) {
+            log.info("Booking status updated to CANCELLED. UID: [{}]", uid);
+        } else {
+            log.warn("Received CANCEL event but booking not found in DB. UID: [{}]", uid);
+        }
+    }
+
+    private LocalDateTime parseTimeSafe(String isoTime) {
+        if (!StringUtils.hasText(isoTime)) return null;
+        try {
+            return ZonedDateTime.parse(isoTime).toLocalDateTime();
+        } catch (DateTimeParseException e) {
+            log.error("Failed to parse time string: {}", isoTime);
+            return null;
+        }
+    }
+
+
+    /**
+     * C-2. 根据指定 UID 生成取消链接 (辅助方法)
+     * 适用于：前端在"我的预约"列表中，点击某具体项目的"取消"按钮
+     */
+    public String getCancelUrlByUid(String bookingUid) {
+        if (!StringUtils.hasText(bookingUid)) {
+            throw new IllegalArgumentException("Booking UID cannot be empty");
+        }
+        // 直接拼接 Cal.com 官方格式
+        return "https://app.cal.com/booking/" + bookingUid + "?cancel=true";
     }
 }

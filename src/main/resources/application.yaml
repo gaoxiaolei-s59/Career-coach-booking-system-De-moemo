@@ -30,3 +30,4 @@ mybatis:
 app:
   cal:
     booking-base-url: https://cal.com/team/career-coach/30min
+    cal-base-url: https://cal.com/chau-chau-smfbef/30min
