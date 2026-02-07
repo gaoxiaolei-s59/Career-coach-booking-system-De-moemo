@@ -156,10 +156,7 @@ public class BookingService {
     }
 
 
-    /**
-     * C-2. 根据指定 UID 生成取消链接 (辅助方法)
-     * 适用于：前端在"我的预约"列表中，点击某具体项目的"取消"按钮
-     */
+
     public String getCancelUrlByUid(String bookingUid) {
         if (!StringUtils.hasText(bookingUid)) {
             throw new IllegalArgumentException("Booking UID cannot be empty");
