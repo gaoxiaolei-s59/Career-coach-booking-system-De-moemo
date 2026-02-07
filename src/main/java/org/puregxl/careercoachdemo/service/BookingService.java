@@ -145,10 +145,13 @@ public class BookingService {
         }
     }
 
+
     private LocalDateTime parseTimeSafe(String isoTime) {
         if (!StringUtils.hasText(isoTime)) return null;
         try {
+            System.out.println("1111");
             return ZonedDateTime.parse(isoTime).toLocalDateTime();
+
         } catch (DateTimeParseException e) {
             log.error("Failed to parse time string: {}", isoTime);
             return null;
