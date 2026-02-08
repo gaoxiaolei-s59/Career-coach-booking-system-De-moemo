@@ -24,8 +24,8 @@ public interface BookingMapper {
     @Select("SELECT * FROM bookings WHERE cal_booking_uid = #{uid} LIMIT 1")
     Booking findByCalUid(String uid);
 
-    // [新增] 查找最近一个“待开始”的预约
-    @Select("SELECT * FROM bookings WHERE user_id = #{userId} AND status = 'BOOKING_CREATED' ORDER BY start_time ASC LIMIT 1")
+    // [新增] 查找最近一个"待开始"的预约
+    @Select("SELECT * FROM bookings WHERE user_id = #{userId} AND status = 'BOOKING_CREATED' ORDER BY start_time LIMIT 1")
     Booking findLatestActiveBooking(@Param("userId") String userId);
 
     //  更新状态

@@ -49,4 +49,9 @@ public class BookingController {
         System.out.println("收到 Webhook: " + request.getTriggerEvent());
         bookingService.handleWebhook(request);
     }
+
+
+
+
+
 }

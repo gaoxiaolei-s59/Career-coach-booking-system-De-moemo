@@ -3,6 +3,9 @@ package org.puregxl.careercoachdemo.model;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+/**
+ * 订阅实体类
+ */
 @Data
 public class Booking {
     private Long id;

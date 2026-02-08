@@ -15,4 +15,3 @@ create table bookings
     constraint cal_booking_uid
         unique (cal_booking_uid)
 );
-

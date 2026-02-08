@@ -97,9 +97,11 @@ public class BookingService {
         }
     }
 
+
+
     // --- 内部 Helper 方法 ---
     private void handleBookingCreated(CalWebhookRequest.Payload payload, String uid) {
-        // 1. [关键] 幂等性检查：防止 Cal.com 重复发送导致数据重复
+        // 1.幂等性检查：防止 Cal.com 重复发送导致数据重复
         if (bookingMapper.findByCalUid(uid) != null) {
             log.warn("Idempotency Check: Booking already exists for UID [{}]. Skipping insert.", uid);
             return;
@@ -122,7 +124,7 @@ public class BookingService {
             booking.setCoachEmail(payload.getOrganizer().getEmail());
         }
 
-        // 5. [关键] 提取 Metadata 中的 UserId
+        // 5. 提取 Metadata 中的 UserId
         Map<String, String> metadata = payload.getMetadata();
         if (metadata != null && StringUtils.hasText(metadata.get("userId"))) {
             booking.setUserId(metadata.get("userId"));
@@ -130,6 +132,8 @@ public class BookingService {
             log.error("CRITICAL: Booking created without userId in metadata! UID: {}", uid);
             booking.setUserId("UNKNOWN_USER"); // 避免数据库报错，方便后续人工排查
         }
+
+
 
         booking.setStatus(BookingStatus.BOOKING_CREATED);
         bookingMapper.insert(booking);
@@ -154,6 +158,7 @@ public class BookingService {
             return null;
         }
     }
+
 
 
     /**
