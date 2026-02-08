@@ -1,0 +1,136 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.game-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 30px;
+    max-width: 900px;
+    width: 100%;
+}
+
+.game-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.game-header h1 {
+    color: #e74c3c;
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.score-board {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.score, .lives {
+    color: #2c3e50;
+}
+
+.score span, .lives span {
+    color: #e74c3c;
+}
+
+.game-canvas-wrapper {
+    position: relative;
+    background: #87ceeb;
+    border: 5px solid #2c3e50;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+#gameCanvas {
+    display: block;
+    background: linear-gradient(to bottom, #87ceeb 0%, #87ceeb 70%, #8b4513 70%, #8b4513 100%);
+}
+
+.start-screen, .game-over {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    z-index: 10;
+}
+
+.start-screen h2, .game-over h2 {
+    font-size: 3em;
+    margin-bottom: 20px;
+    color: #f39c12;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+}
+
+.start-screen p, .game-over p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+    color: #ecf0f1;
+}
+
+button {
+    padding: 15px 40px;
+    font-size: 1.2em;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+button:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.controls {
+    margin-top: 20px;
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 0.9em;
+}
+
+.controls p {
+    margin: 5px 0;
+}
+
+.controls strong {
+    color: #2c3e50;
+}

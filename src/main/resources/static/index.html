@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超级马里奥 - 小游戏</title>
+    <link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>超级马里奥</h1>
+            <div class="score-board">
+                <div class="score">得分: <span id="score">0</span></div>
+                <div class="lives">生命: <span id="lives">3</span></div>
+            </div>
+        </div>
+        
+        <div class="game-canvas-wrapper">
+            <canvas id="gameCanvas" width="800" height="400"></canvas>
+            <div id="gameOver" class="game-over hidden">
+                <h2>游戏结束!</h2>
+                <p>最终得分: <span id="finalScore">0</span></p>
+                <button id="restartBtn">重新开始</button>
+            </div>
+            <div id="startScreen" class="start-screen">
+                <h2>超级马里奥</h2>
+                <p>使用方向键移动，空格键跳跃</p>
+                <button id="startBtn">开始游戏</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <p><strong>操作说明:</strong></p>
+            <p>← → 移动 | 空格键 跳跃</p>
+        </div>
+    </div>
+    
+    <script src="js/game.js"></script>
+</body>
+</html>
